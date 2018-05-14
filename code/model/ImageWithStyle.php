@@ -11,14 +11,14 @@ class ImageWithStyle extends DataObject
 
     private static $singular_name = 'Image With Style';
 
-    function i18n_singular_name()
+    public function i18n_singular_name()
     {
         return _t('ImageWithStyle.SINGULAR_NAME', 'Image With Style');
     }
 
     private static $plural_name = 'Images With Style';
 
-    function i18n_plural_name()
+    public function i18n_plural_name()
     {
         return _t('ImageWithStyle.PLURAL_NAME', 'Images With Style');
     }
@@ -107,7 +107,7 @@ class ImageWithStyle extends DataObject
     ### can Section
     #######################
 
-    function canDelete($member = null)
+    public function canDelete($member = null)
     {
         return false;
     }
@@ -127,15 +127,15 @@ class ImageWithStyle extends DataObject
         $fieldLabels = $this->FieldLabels();
         $indexes = $this->Config()->get('indexes');
         $requiredFields = $this->Config()->get('required_fields');
-        if($this->exists() && $this->hasRealStyle()) {
+        if ($this->exists() && $this->hasRealStyle()) {
             $requiredFields[] = 'ImageID';
         }
-        if(is_array($requiredFields)) {
-            foreach($requiredFields as $field) {
+        if (is_array($requiredFields)) {
+            foreach ($requiredFields as $field) {
                 $value = $this->$field;
-                if(! $value) {
+                if (! $value) {
                     $fieldWithoutID = $field;
-                    if(substr($fieldWithoutID, -2) === 'ID') {
+                    if (substr($fieldWithoutID, -2) === 'ID') {
                         $fieldWithoutID = substr($fieldWithoutID, 0, -2);
                     }
                     $myName = isset($fieldLabels[$fieldWithoutID]) ? $fieldLabels[$fieldWithoutID] : $fieldWithoutID;
@@ -153,7 +153,7 @@ class ImageWithStyle extends DataObject
                         ->filter(array($field => $value))
                         ->exclude(array('ID' => $id))
                         ->count();
-                    if($count > 0) {
+                    if ($count > 0) {
                         $myName = $fieldLabels['$field'];
                         $result->error(
                             _t(
@@ -181,7 +181,7 @@ class ImageWithStyle extends DataObject
         parent::onAfterWrite();
         //...
         $image = $this->Image();
-        if($image && $image->exists()) {
+        if ($image && $image->exists()) {
             $image->Title = $this->Title;
             $image->write();
         }
@@ -232,26 +232,26 @@ class ImageWithStyle extends DataObject
 
         //do first??
         $rightFieldDescriptions = $this->Config()->get('field_labels_right');
-        foreach($rightFieldDescriptions as $field => $desc) {
-           $formField = $fields->DataFieldByName($field);
-           if(! $formField) {
-            $formField = $fields->DataFieldByName($field.'ID');
-           }
-           if($formField) {
-               $formField->setDescription($desc);
-           }
+        foreach ($rightFieldDescriptions as $field => $desc) {
+            $formField = $fields->DataFieldByName($field);
+            if (! $formField) {
+                $formField = $fields->DataFieldByName($field.'ID');
+            }
+            if ($formField) {
+                $formField->setDescription($desc);
+            }
         }
         //...
-        if($this->hasRealStyle()) {
+        if ($this->hasRealStyle()) {
             $style = $this->Style();
             $varsArray = $this->Config()->get('unique_vars');
             //var_dump($this->Style());
-            foreach($varsArray as $varName){
-                if($this->Style()->hasStyleVariable($varName)){
+            foreach ($varsArray as $varName) {
+                if ($this->Style()->hasStyleVariable($varName)) {
                     $name = $varName . 'Name';
                     $type = $varName . 'Type';
                     $descriptionField = $varName . 'Description';
-                    switch ($this->Style()->$type){
+                    switch ($this->Style()->$type) {
                         case 'Pixels':
                         case 'Percentage':
                             $newField = NumericField::create($varName, $style->$name)
@@ -270,7 +270,7 @@ class ImageWithStyle extends DataObject
                     $fields->removeByName($varName);
                 }
             }
-            if($style->ClassNameForCSS) {
+            if ($style->ClassNameForCSS) {
                 $fields->replaceField(
                     'Image',
                     $uploadField = PerfectCMSImagesUploadField::create('Image', 'Image', null, $style->ClassNameForCSS)
@@ -278,7 +278,7 @@ class ImageWithStyle extends DataObject
             }
         } else {
             $varsArray = $this->Config()->get('unique_vars');
-            foreach($varsArray as $var){
+            foreach ($varsArray as $var) {
                 $fields->removeByName($var);
             }
             $fields->replaceField(
@@ -314,9 +314,9 @@ class ImageWithStyle extends DataObject
     public function getImageElement()
     {
         $html = '';
-        if($this->ImageID && $this->hasRealStyle()){
+        if ($this->ImageID && $this->hasRealStyle()) {
             $image = $this->Image();
-            if($image && $image->exists()) {
+            if ($image && $image->exists()) {
                 $style = $this->Style();
                 $array = [
                     'Styles' => $this->buildStyles(),
@@ -337,29 +337,30 @@ class ImageWithStyle extends DataObject
     public function buildStyles()
     {
         $styles = '';
-        if($this->hasRealStyle()) {
+        if ($this->hasRealStyle()) {
             $style = $this->Style();
             $stylesArray = [];
-            $varsArray = $this->Config()->get('unique_vars');;
+            $varsArray = $this->Config()->get('unique_vars');
+            ;
             //var_dump($this->Style());
-            foreach($varsArray as $var){
-                if($this->$var){
+            foreach ($varsArray as $var) {
+                if ($this->$var) {
                     $name = $var . 'Name';
                     $type = $var . 'Type';
                     $styleString = $style->$name . ': ' . $this->$var . $this->convertVarTypeToCSS($style->$type) . ';';
                     array_push($stylesArray, $styleString);
                 }
             }
-            if(! empty($stylesArray)){
+            if (! empty($stylesArray)) {
                 $styles = ' style="'.implode(" ", $stylesArray).'"';
             }
         }
         return $styles;
     }
 
-    protected function hasRealStyle() 
+    protected function hasRealStyle()
     {
-        if($this->StyleID) {
+        if ($this->StyleID) {
             $style = $this->Style();
             return $style->exists();
         }
@@ -374,7 +375,7 @@ class ImageWithStyle extends DataObject
     protected function convertVarTypeToCSS($type)
     {
         $str = '';
-        switch ($type){
+        switch ($type) {
             case 'Pixels':
                 $str = 'px';
                 break;

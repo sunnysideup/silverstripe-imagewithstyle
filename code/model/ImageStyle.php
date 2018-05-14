@@ -19,14 +19,14 @@ class ImageStyle extends DataObject
 
     private static $singular_name = 'Image Style';
 
-    function i18n_singular_name()
+    public function i18n_singular_name()
     {
         return _t('ImageStyle.SINGULAR_NAME', 'Image Style');
     }
 
     private static $plural_name = 'Image Styles';
 
-    function i18n_plural_name()
+    public function i18n_plural_name()
     {
         return _t('ImageStyle.PLURAL_NAME', 'Image Styles');
     }
@@ -146,21 +146,20 @@ class ImageStyle extends DataObject
     ### can Section
     #######################
 
-    function canCreate($member = null)
+    public function canCreate($member = null)
     {
         return false;
     }
 
-    function canEdit($member = null)
+    public function canEdit($member = null)
     {
         //we block edits in CMS
         return parent::canEdit($member);
     }
 
-    function canDelete($member = null)
+    public function canDelete($member = null)
     {
-        if($this->ImagesWithStyle()->count() === 0 ) {
-
+        if ($this->ImagesWithStyle()->count() === 0) {
             return parent::canDelete($member);
         }
 
@@ -182,12 +181,12 @@ class ImageStyle extends DataObject
         $fieldLabels = $this->FieldLabels();
         $indexes = $this->Config()->get('indexes');
         $requiredFields = $this->Config()->get('required_fields');
-        if(is_array($requiredFields)) {
-            foreach($requiredFields as $field) {
+        if (is_array($requiredFields)) {
+            foreach ($requiredFields as $field) {
                 $value = $this->$field;
-                if(! $value) {
+                if (! $value) {
                     $fieldWithoutID = $field;
-                    if(substr($fieldWithoutID, -2) === 'ID') {
+                    if (substr($fieldWithoutID, -2) === 'ID') {
                         $fieldWithoutID = substr($fieldWithoutID, 0, -2);
                     }
                     $myName = isset($fieldLabels[$fieldWithoutID]) ? $fieldLabels[$fieldWithoutID] : $fieldWithoutID;
@@ -205,7 +204,7 @@ class ImageStyle extends DataObject
                         ->filter(array($field => $value))
                         ->exclude(array('ID' => $id))
                         ->count();
-                    if($count > 0) {
+                    if ($count > 0) {
                         $myName = $fieldLabels['$field'];
                         $result->error(
                             _t(
@@ -225,8 +224,8 @@ class ImageStyle extends DataObject
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        $this->ClassNameForCSS = preg_replace('/\W+/','-',strtolower(strip_tags($this->ClassNameForCSS)));
-        if(! $this->ClassNameForCSS) {
+        $this->ClassNameForCSS = preg_replace('/\W+/', '-', strtolower(strip_tags($this->ClassNameForCSS)));
+        if (! $this->ClassNameForCSS) {
             $this->ClassNameForCSS = 'image-with-style-'.$this->ID;
         }
         //...
@@ -245,33 +244,32 @@ class ImageStyle extends DataObject
         $defaults = $this->Config()->record_defaults;
         $currentOnes = array_flip(ImageStyle::get()->column('ID'));
         $imageNames = Config::inst()->get('PerfectCMSImageDataExtension', 'perfect_cms_images_image_definitions');
-        foreach($defaults as $defaultValues) {
-            foreach($defaultValues as $field => $value) {
-                if(is_array($value)) {
+        foreach ($defaults as $defaultValues) {
+            foreach ($defaultValues as $field => $value) {
+                if (is_array($value)) {
                     $defaultValues[$field] = serialize($value);
                 }
             }
             $obj = ImageStyle::get()->filter(['Title' => $defaultValues['Title']])->first();
-            if(!$obj) {
+            if (!$obj) {
                 $obj = ImageStyle::create($defaultValues);
             } else {
-                foreach($obj->db() as $field => $type) {
+                foreach ($obj->db() as $field => $type) {
                     $obj->$field = null;
                 }
-                foreach($defaultValues as $field => $value) {
+                foreach ($defaultValues as $field => $value) {
                     $obj->$field = $value;
                 }
             }
             unset($currentOnes[$obj->ID]);
             $obj->write();
-            if(! isset($imageNames[$obj->ClassNameForCSS])) {
+            if (! isset($imageNames[$obj->ClassNameForCSS])) {
                 user_error('You need to define a perfect CMS image with the following name: '.$obj->ClassNameForCSS);
             }
-
         }
-        foreach($currentOnes as $id) {
+        foreach ($currentOnes as $id) {
             $obj = ImageStyle::get()->byID($id);
-            if($obj->canDelete()) {
+            if ($obj->canDelete()) {
                 $obj->delete();
             }
         }
@@ -316,19 +314,19 @@ class ImageStyle extends DataObject
 
         //do first??
         $rightFieldDescriptions = $this->Config()->get('field_labels_right');
-        foreach($rightFieldDescriptions as $field => $desc) {
+        foreach ($rightFieldDescriptions as $field => $desc) {
             $formField = $fields->DataFieldByName($field);
-            if(! $formField) {
+            if (! $formField) {
                 $formField = $fields->DataFieldByName($field.'ID');
             }
-            if($formField) {
+            if ($formField) {
                 $formField->setDescription($desc);
             }
         }
 
         // move variables to their own tab
-        for($i = 1; $i < 6; $i++) {
-            if($this->HasStyleVariable('Var'.$i)) {
+        for ($i = 1; $i < 6; $i++) {
+            if ($this->HasStyleVariable('Var'.$i)) {
                 $fieldsToAdd = [
                     $fields->dataFieldByName('Var'.$i.'Name'),
                     $fields->dataFieldByName('Var'.$i.'Type'),
@@ -349,7 +347,7 @@ class ImageStyle extends DataObject
         $fields->removeByName('ImagesWithStyle');
 
         //make everything readonly
-        foreach($fields->saveableFields() as $field) {
+        foreach ($fields->saveableFields() as $field) {
             $fieldName = $field->getName();
             $oldField = $fields->dataFieldByName($fieldName);
             if ($oldField) {
@@ -367,13 +365,11 @@ class ImageStyle extends DataObject
         $name = $varName.'Name';
         $type = $varName.'Type';
         $hasBase = $this->$name && $this->$type ? true : false;
-        if($this->$type === 'Options') {
+        if ($this->$type === 'Options') {
             return $hasBase && is_array($this->OptionsAsArray($varName)) ? true : false;
         } else {
-
             return $hasBase;
         }
-
     }
     public function HasOptionsAsArray($varName)
     {
@@ -386,15 +382,13 @@ class ImageStyle extends DataObject
     {
         $options = $varName.'Options';
         $array = [];
-        if($this->$options) {
+        if ($this->$options) {
             $array = @unserialize($this->$options);
         }
-        if(is_array($array)) {
+        if (is_array($array)) {
             return $array;
         }
 
         return [];
     }
-
-
 }

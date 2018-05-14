@@ -2,7 +2,6 @@
 
 class ImageWithStyleAdmin extends ModelAdmin
 {
-
     private static $managed_models = [
         'ImagesWithStyleSelection',
         'ImageWithStyle',
@@ -16,6 +15,4 @@ class ImageWithStyleAdmin extends ModelAdmin
     private static $menu_priority = 10;
 
     private static $menu_icon = '/userforms/images/sitetree_icon.png';
-
-
 }

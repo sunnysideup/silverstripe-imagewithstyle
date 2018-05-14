@@ -169,7 +169,18 @@ class ImagesWithStyleSelection extends DataObject
         parent::onAfterWrite();
         if($this->PlaceToStoreImagesID) {
             $folder = $this->PlaceToStoreImages();
-            $files = Image::get()->filter(['ParentID' => $this->PlaceToStoreImagesID])
+            $allImages = Image::get()->filter(['ParentID' => $this->PlaceToStoreImagesID]);
+            $existingImages = $this->RawImages()->column('ID');
+            $difference = array_diff($allImages, $existingImages);
+            $list = $this->StyledImages();
+            if(count($difference)) {
+                foreach($difference as $imageID) {
+                    $styledImages = ImageStyle::create()
+                    $styledImage->ImageID = $imageID;
+                    $styledImage->write();
+                    $list->add($styledImage);
+                }
+            }
 
         }
         //...
@@ -247,13 +258,19 @@ class ImagesWithStyleSelection extends DataObject
         return $fields;
     }
 
-
+    /**
+     * @return DataList
+     */
     public function RawImages()
     {
         $array = [];
-        foreach($this->StyledImages() as $styledImage) {
-            $array[$styledImage->ImageID] = $styledImage->ImageID;
+        if($this->StyledImages()->count()) {
+            foreach($this->StyledImages()->column('ImageID') as $id) {
+                $array[$styledImage->ImageID] = $styledImage->ImageID;
+            }
         }
+
+        return Image::get()->filter(['ID' => $array]);
     }
 
 }
