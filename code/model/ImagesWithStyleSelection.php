@@ -175,7 +175,7 @@ class ImagesWithStyleSelection extends DataObject
             $list = $this->StyledImages();
             if(count($difference)) {
                 foreach($difference as $imageID) {
-                    $styledImages = ImageStyle::create()
+                    $styledImages = ImageStyle::create();
                     $styledImage->ImageID = $imageID;
                     $styledImage->write();
                     $list->add($styledImage);
