@@ -21,7 +21,8 @@
     ],
     "require": {
         "silverstripe/framework": "~3.6",
-        "silverstripe/cms": "~3.6"
+        "silverstripe/cms": "~3.6",
+        "sunnysideup/perfect_cms_images": "*"
     },
     "extra": {
         "installer-name": "imagewithstyle"

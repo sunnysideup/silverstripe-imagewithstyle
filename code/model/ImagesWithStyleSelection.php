@@ -34,6 +34,10 @@ class ImagesWithStyleSelection extends DataObject
         'Description' => 'Text'
     ];
 
+    private static $has_one = [
+        'PlaceToStoreImages' => 'Folder'
+    ];
+
     private static $many_many = [
         'StyledImages' => 'ImageWithStyle'
     ];
@@ -163,6 +167,11 @@ class ImagesWithStyleSelection extends DataObject
     public function onAfterWrite()
     {
         parent::onAfterWrite();
+        if($this->PlaceToStoreImagesID) {
+            $folder = $this->PlaceToStoreImages();
+            $files = Image::get()->filter(['ParentID' => $this->PlaceToStoreImagesID])
+
+        }
         //...
     }
 
@@ -238,5 +247,13 @@ class ImagesWithStyleSelection extends DataObject
         return $fields;
     }
 
+
+    public function RawImages()
+    {
+        $array = [];
+        foreach($this->StyledImages() as $styledImage) {
+            $array[$styledImage->ImageID] = $styledImage->ImageID;
+        }
+    }
 
 }
