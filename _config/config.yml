@@ -1,0 +1,53 @@
+ImageStyle:
+    record_defaults:
+        -
+            Title: 'Unstyled Image',
+            Description: 'Default Image Style (what you upload is what you gonna get)',
+            ClassNameForCSS: 'unstyled-image',
+
+        #     #EXAMPLE BELOW - NOTE hyphen starts new style separate items ...
+        # -
+        #     Title: 'Second Unstyled Image with set height',
+        #     ClassNameForCSS: 'foo-bar',
+        #
+        #     #OPTIONAL ONES BELOW
+
+        #     Description: 'Image without any further styling',
+
+        #     Var1Name: 'top|bottom|left|right|margin-top|margin-bottom|float|etc....'
+        #     Var1Type: 'Pixels'
+
+        #     Var2Name: 'top|bottom|left|right|margin-top|margin-bottom|float|etc....'
+        #     Var2Type: 'Options'
+        #     Var2Options: [
+        #         left: 'Allow items to the right of me'
+        #         right: 'Allow items to the left of me'
+        #         none: 'Dont allow items on either side'
+        #     ]
+        #     Var3Name: 'top|bottom|left|right|margin-top|margin-bottom|etc....'
+        #     Var3Type: 'Percentage'
+
+        #     Var4Name: 'top|bottom|left|right|margin-top|margin-bottom|etc....'
+        #     Var4Type: 'Options'
+        #     Var4Options: [
+        #         block: 'stand-alone'
+        #         inline: 'as part of the text'
+        #     ]
+        #     Var4Description: 'Block means by itself, inline means as text flow'
+
+        #     Var5Name: 'top|bottom|left|right|margin-top|margin-bottom|etc....'
+        #     Var5Type: 'Pixels'
+        #
+
+
+PerfectCMSImageDataExtension:
+  perfect_cms_images_image_definitions:
+    unstyled-image:
+      width: 2000
+      # height: 100
+      enforce_size: false
+      folder: unstyled-image
+      filetype: "jpg"
+      use_retina: true
+      padding_bg_colour: '#ffffff'
+      crop: false

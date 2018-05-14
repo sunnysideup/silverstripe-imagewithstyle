@@ -174,6 +174,9 @@ class ImageWithStyle extends DataObject
     {
         parent::onBeforeWrite();
         //...
+        if(!$this->StyleID) {
+            $this->StyleID = $defaultStyle->ID;
+        }
     }
 
     public function onAfterWrite()
@@ -275,6 +278,7 @@ class ImageWithStyle extends DataObject
                     'Image',
                     $uploadField = PerfectCMSImagesUploadField::create('Image', 'Image', null, $style->ClassNameForCSS)
                 );
+                $uploadField->setFolderName($this->BestFolder());
             }
         } else {
             $varsArray = $this->Config()->get('unique_vars');
@@ -386,5 +390,21 @@ class ImageWithStyle extends DataObject
                 break;
         }
         return $str;
+    }
+
+    public function BestFolder()
+    {
+        if($this->Selections()->count()) {
+            foreach($this->Selections() as $selection) {
+                if($folder = $selection->PlaceToStoreImages()) {
+                    if($folder->FileName) {
+                        return trim(
+                            str_replace(ASSETS_DIR, '', $folder->Filename),
+                            '/'
+                        );
+                    }
+                }
+            }
+        }
     }
 }

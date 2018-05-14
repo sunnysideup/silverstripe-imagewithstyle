@@ -5,6 +5,24 @@
 class ImageStyle extends DataObject
 {
 
+    private static $default_style = 'unstyled-image';
+
+    public static function get_default_style()
+    {
+        $defaultStyle = ImageStyle::get()->filter(
+            [
+                'ClassNameForCSS' => Config::inst()->get('ImageStyle', 'default_style')
+            ]
+        )->first();
+        if(! $defaultStyle) {
+            $defaultStyle = ImageStyle::get()->first();
+            if(! $defaultStyle) {
+                user_error('Could not find a default Style.');
+            }
+        }
+
+        return $defaultStyle;
+    }
 
     /**
      * see _config folder for details ...
@@ -269,7 +287,7 @@ class ImageStyle extends DataObject
         }
         foreach ($currentOnes as $id) {
             $obj = ImageStyle::get()->byID($id);
-            if ($obj->canDelete()) {
+            if ($obj && $obj->canDelete()) {
                 $obj->delete();
             }
         }

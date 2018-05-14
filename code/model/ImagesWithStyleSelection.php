@@ -168,17 +168,21 @@ class ImagesWithStyleSelection extends DataObject
     {
         parent::onAfterWrite();
         if($this->PlaceToStoreImagesID) {
-            $folder = $this->PlaceToStoreImages();
-            $allImages = Image::get()->filter(['ParentID' => $this->PlaceToStoreImagesID]);
+            $allImages = Image::get()->filter(['ParentID' => $this->PlaceToStoreImagesID])->column('ID');
             $existingImages = $this->RawImages()->column('ID');
             $difference = array_diff($allImages, $existingImages);
             $list = $this->StyledImages();
             if(count($difference)) {
                 foreach($difference as $imageID) {
-                    $styledImages = ImageStyle::create();
-                    $styledImage->ImageID = $imageID;
-                    $styledImage->write();
-                    $list->add($styledImage);
+                    $image = Image::get()->byID($imageID);
+                    if($image) {
+                        $styledImage = ImageWithStyle::create();
+                        $styledImage->Title = $image->Name;
+                        $styledImage->ImageID = $imageID;
+                        $styledImage->StyleID = ImageStyle::get_default_style()->ID;
+                        $styledImage->write();
+                        $list->add($styledImage);
+                    }
                 }
             }
 
@@ -228,17 +232,25 @@ class ImagesWithStyleSelection extends DataObject
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
-
+        $fields->removeByName('PlaceToStoreImages');
+        $fields->addFieldToTab(
+            'Root.Main',
+            TreeDropdownField::create(
+                'PlaceToStoreImagesID',
+                'Image Folder',
+                'Folder'
+            )->setRightTitle('Optional - set folder ... all images in this folder will automatically be added.')
+        );
         //do first??
         $rightFieldDescriptions = $this->Config()->get('field_labels_right');
         foreach($rightFieldDescriptions as $field => $desc) {
-           $formField = $fields->DataFieldByName($field);
-           if(! $formField) {
-            $formField = $fields->DataFieldByName($field.'ID');
-           }
-           if($formField) {
-               $formField->setDescription($desc);
-           }
+            $formField = $fields->DataFieldByName($field);
+            if(! $formField) {
+                $formField = $fields->DataFieldByName($field.'ID');
+            }
+            if($formField) {
+                $formField->setDescription($desc);
+            }
         }
         //...
         if($this->exists()) {
@@ -266,7 +278,9 @@ class ImagesWithStyleSelection extends DataObject
         $array = [];
         if($this->StyledImages()->count()) {
             foreach($this->StyledImages()->column('ImageID') as $id) {
-                $array[$styledImage->ImageID] = $styledImage->ImageID;
+                if($id) {
+                    $array[$id] = $id;
+                }
             }
         }
 
