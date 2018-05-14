@@ -1,0 +1,29 @@
+{
+    "name": "sunnysideup/imagewithstyle",
+    "type": "silverstripe-module",
+    "description": "Add Images to your CMS and apply a particular style to them.",
+    "keywords": [
+        "Silverstripe-CMS",
+        "CMS",
+        "Silverstripe",
+        "Images",
+        "Image",
+        "Style",
+        "Formatted"
+    ],
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Nicolaas Francken",
+            "email": "modules@sunnysideup.co.nz",
+            "role": "lead developer"
+        }
+    ],
+    "require": {
+        "silverstripe/framework": "~3.6",
+        "silverstripe/cms": "~3.6"
+    },
+    "extra": {
+        "installer-name": "imagewithstyle"
+    }
+}
