@@ -174,7 +174,7 @@ class ImageWithStyle extends DataObject
     {
         parent::onBeforeWrite();
         //...
-        if(!$this->StyleID) {
+        if (!$this->StyleID) {
             $this->StyleID = $defaultStyle->ID;
         }
     }
@@ -394,10 +394,10 @@ class ImageWithStyle extends DataObject
 
     public function BestFolder()
     {
-        if($this->Selections()->count()) {
-            foreach($this->Selections() as $selection) {
-                if($folder = $selection->PlaceToStoreImages()) {
-                    if($folder->FileName) {
+        if ($this->Selections()->count()) {
+            foreach ($this->Selections() as $selection) {
+                if ($folder = $selection->PlaceToStoreImages()) {
+                    if ($folder->FileName) {
                         return trim(
                             str_replace(ASSETS_DIR, '', $folder->Filename),
                             '/'

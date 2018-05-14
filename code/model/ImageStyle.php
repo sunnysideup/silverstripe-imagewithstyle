@@ -4,7 +4,6 @@
 
 class ImageStyle extends DataObject
 {
-
     private static $default_style = 'unstyled-image';
 
     public static function get_default_style()
@@ -14,9 +13,9 @@ class ImageStyle extends DataObject
                 'ClassNameForCSS' => Config::inst()->get('ImageStyle', 'default_style')
             ]
         )->first();
-        if(! $defaultStyle) {
+        if (! $defaultStyle) {
             $defaultStyle = ImageStyle::get()->first();
-            if(! $defaultStyle) {
+            if (! $defaultStyle) {
                 user_error('Could not find a default Style.');
             }
         }

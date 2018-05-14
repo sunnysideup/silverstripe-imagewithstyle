@@ -12,14 +12,14 @@ class ImagesWithStyleSelection extends DataObject
 
     private static $singular_name = 'Selection of Images';
 
-    function i18n_singular_name()
+    public function i18n_singular_name()
     {
         return _t('ImagesWithStyleSelection.SINGULAR_NAME', 'Selection of Images');
     }
 
     private static $plural_name = 'Selections of Images';
 
-    function i18n_plural_name()
+    public function i18n_plural_name()
     {
         return _t('ImagesWithStyleSelection.PLURAL_NAME', 'Selections of Images');
     }
@@ -118,12 +118,12 @@ class ImagesWithStyleSelection extends DataObject
         $fieldLabels = $this->FieldLabels();
         $indexes = $this->Config()->get('indexes');
         $requiredFields = $this->Config()->get('required_fields');
-        if(is_array($requiredFields)) {
-            foreach($requiredFields as $field) {
+        if (is_array($requiredFields)) {
+            foreach ($requiredFields as $field) {
                 $value = $this->$field;
-                if(! $value) {
+                if (! $value) {
                     $fieldWithoutID = $field;
-                    if(substr($fieldWithoutID, -2) === 'ID') {
+                    if (substr($fieldWithoutID, -2) === 'ID') {
                         $fieldWithoutID = substr($fieldWithoutID, 0, -2);
                     }
                     $myName = isset($fieldLabels[$fieldWithoutID]) ? $fieldLabels[$fieldWithoutID] : $fieldWithoutID;
@@ -141,7 +141,7 @@ class ImagesWithStyleSelection extends DataObject
                         ->filter(array($field => $value))
                         ->exclude(array('ID' => $id))
                         ->count();
-                    if($count > 0) {
+                    if ($count > 0) {
                         $myName = $fieldLabels['$field'];
                         $result->error(
                             _t(
@@ -167,15 +167,15 @@ class ImagesWithStyleSelection extends DataObject
     public function onAfterWrite()
     {
         parent::onAfterWrite();
-        if($this->PlaceToStoreImagesID) {
+        if ($this->PlaceToStoreImagesID) {
             $allImages = Image::get()->filter(['ParentID' => $this->PlaceToStoreImagesID])->column('ID');
             $existingImages = $this->RawImages()->column('ID');
             $difference = array_diff($allImages, $existingImages);
             $list = $this->StyledImages();
-            if(count($difference)) {
-                foreach($difference as $imageID) {
+            if (count($difference)) {
+                foreach ($difference as $imageID) {
                     $image = Image::get()->byID($imageID);
-                    if($image) {
+                    if ($image) {
                         $styledImage = ImageWithStyle::create();
                         $styledImage->Title = $image->Name;
                         $styledImage->ImageID = $imageID;
@@ -185,7 +185,6 @@ class ImagesWithStyleSelection extends DataObject
                     }
                 }
             }
-
         }
         //...
     }
@@ -243,17 +242,17 @@ class ImagesWithStyleSelection extends DataObject
         );
         //do first??
         $rightFieldDescriptions = $this->Config()->get('field_labels_right');
-        foreach($rightFieldDescriptions as $field => $desc) {
+        foreach ($rightFieldDescriptions as $field => $desc) {
             $formField = $fields->DataFieldByName($field);
-            if(! $formField) {
+            if (! $formField) {
                 $formField = $fields->DataFieldByName($field.'ID');
             }
-            if($formField) {
+            if ($formField) {
                 $formField->setDescription($desc);
             }
         }
         //...
-        if($this->exists()) {
+        if ($this->exists()) {
             $config = GridFieldConfig_RelationEditor::create();
             $config->addComponent(new GridFieldSortableRows('SortOrder'));
             $fields->removeByName('StyledImages');
@@ -276,9 +275,9 @@ class ImagesWithStyleSelection extends DataObject
     public function RawImages()
     {
         $array = [];
-        if($this->StyledImages()->count()) {
-            foreach($this->StyledImages()->column('ImageID') as $id) {
-                if($id) {
+        if ($this->StyledImages()->count()) {
+            foreach ($this->StyledImages()->column('ImageID') as $id) {
+                if ($id) {
                     $array[$id] = $id;
                 }
             }
@@ -286,5 +285,4 @@ class ImagesWithStyleSelection extends DataObject
 
         return Image::get()->filter(['ID' => $array]);
     }
-
 }
