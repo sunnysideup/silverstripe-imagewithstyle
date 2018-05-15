@@ -30,7 +30,7 @@ class ImagesWithStyleSelection extends DataObject
     #######################
 
     private static $db = [
-        'Title' => 'Varchar',
+        'Title' => 'Varchar(255)', // this needs to be lengthy to avoid the same names ...
         'Description' => 'Text'
     ];
 
@@ -234,12 +234,22 @@ class ImagesWithStyleSelection extends DataObject
         $fields->removeByName('PlaceToStoreImages');
         $fields->addFieldToTab(
             'Root.Main',
-            TreeDropdownField::create(
+            $treeField = TreeDropdownField::create(
                 'PlaceToStoreImagesID',
                 'Image Folder',
                 'Folder'
             )->setRightTitle('Optional - set folder ... all images in this folder will automatically be added.')
         );
+        if ($this->PlaceToStoreImagesID) {
+            $folder = $this->PlaceToStoreImages();
+            if ($folder && $folder->exists()) {
+                $rightFieldTitle = $treeField->RightTitle();
+                $rightFieldTitle .= '
+                    <br  /><a href="/admin/assets/show/'.$folder->ID.'/" target="_blank">add images directly to folder</a>
+                    <br />After you have updated the folder make sure to save this list to receive the latest updates.';
+                $treeField->setRightTitle($rightFieldTitle);
+            }
+        }
         //do first??
         $rightFieldDescriptions = $this->Config()->get('field_labels_right');
         foreach ($rightFieldDescriptions as $field => $desc) {
@@ -284,5 +294,19 @@ class ImagesWithStyleSelection extends DataObject
         }
 
         return Image::get()->filter(['ID' => $array]);
+    }
+
+    /**
+     * force the list to use a certain folder ...
+     * @param  string $folderName
+     * @return ImagesWithStyleSelection
+     */
+    public function createFolder($folderName)
+    {
+        $folder = Folder::find_or_make($folderName);
+        $this->PlaceToStoreImagesID = $folder->ID;
+        $folder->write();
+
+        return $this;
     }
 }
