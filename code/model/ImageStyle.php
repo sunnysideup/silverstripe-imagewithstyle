@@ -395,7 +395,7 @@ class ImageStyle extends DataObject
         return count($options) ? true : false;
     }
 
-    public function OptionsAsArray($varName) : array
+    public function OptionsAsArray($varName)
     {
         $options = $varName.'Options';
         $array = [];
