@@ -158,16 +158,11 @@ class ImagesWithStyleSelection extends DataObject
         return $result;
     }
 
+
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        //...
-    }
-
-    public function onAfterWrite()
-    {
-        parent::onAfterWrite();
-        if ($this->PlaceToStoreImagesID) {
+        if ($this->exists() && $this->PlaceToStoreImagesID) {
             $allImages = Image::get()->filter(['ParentID' => $this->PlaceToStoreImagesID])->column('ID');
             $existingImages = $this->RawImages()->column('ID');
             $difference = array_diff($allImages, $existingImages);
