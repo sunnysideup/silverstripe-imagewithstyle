@@ -275,6 +275,14 @@ class ImagesWithStyleSelection extends DataObject
     }
 
     /**
+     * @return Int
+     */
+    public function ImageCount()
+    {
+        return $this->StyledImages()->count();
+    }
+
+    /**
      * @return DataList
      */
     public function RawImages()
