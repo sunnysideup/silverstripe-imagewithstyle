@@ -1,3 +1,11 @@
+Page:
+  extensions:
+    - ImageWithStyleDataExtension
+
+DataObject:
+  extensions:
+    - ImageWithStyleDataExtension
+
 ImageStyle:
     record_defaults:
         -

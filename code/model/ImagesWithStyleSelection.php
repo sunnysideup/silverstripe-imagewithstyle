@@ -308,7 +308,7 @@ class ImagesWithStyleSelection extends DataObject
     {
         $folder = Folder::find_or_make($folderName);
         $this->PlaceToStoreImagesID = $folder->ID;
-        $folder->write();
+        $this->write();
 
         return $this;
     }

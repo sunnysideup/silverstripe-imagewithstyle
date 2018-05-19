@@ -14,5 +14,5 @@ class ImageWithStyleAdmin extends ModelAdmin
 
     private static $menu_priority = 10;
 
-    private static $menu_icon = '/userforms/images/sitetree_icon.png';
+    private static $menu_icon = '/imagewithstyle/images/ImageWithStyleIcon.png';
 }
