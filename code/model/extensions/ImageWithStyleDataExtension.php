@@ -23,10 +23,14 @@ class ImageWithStyleDataExtension extends DataExtension
 
             $list = ImagesWithStyleSelection::get()->map()->toArray();
             $myList = ImagesWithStyleSelection::get()->filter(['Title' => $standardListName]);
+            $myListObject = null;
             if ($myList->count() === 1) {
-                $myID = $myList->first()->ID;
-                $list[$myID] = ' *** '.$list[$myID]." [RECOMMENDED] ";
-                asort($list);
+                $myListObject = $myList->first();
+                if ($myListObject && $myListObject->exists()) {
+                    $myID = $myListObject->ID;
+                    $list[$myID] = ' *** '.$list[$myID]." [RECOMMENDED] ";
+                    asort($list);
+                }
             }
             $fields->addFieldsToTab(
                 'Root.'.$tabName,
@@ -40,7 +44,9 @@ class ImageWithStyleDataExtension extends DataExtension
                     )
                 ]
             );
-
+            if ($myListObject) {
+                $myListObject->addLinksToFolderOnAFieldAsRightTitle($imageListField);
+            }
             $fieldID = $tabName.'ImageSelectionID';
             if ($this->owner->$fieldID && $imageList = ImagesWithStyleSelection::get()->byID($this->owner->$fieldID)) {
                 if ($imageList->PlaceToStoreImagesID) {

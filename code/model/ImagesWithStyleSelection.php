@@ -235,16 +235,7 @@ class ImagesWithStyleSelection extends DataObject
                 'Folder'
             )->setRightTitle('Optional - set folder ... all images in this folder will automatically be added.')
         );
-        if ($this->PlaceToStoreImagesID) {
-            $folder = $this->PlaceToStoreImages();
-            if ($folder && $folder->exists()) {
-                $rightFieldTitle = $treeField->RightTitle();
-                $rightFieldTitle .= '
-                    <br  /><a href="/admin/assets/show/'.$folder->ID.'/" target="_blank">add images directly to folder</a>
-                    <br />After you have updated the folder make sure to save this list to receive the latest updates.';
-                $treeField->setRightTitle($rightFieldTitle);
-            }
-        }
+        
         //do first??
         $rightFieldDescriptions = $this->Config()->get('field_labels_right');
         foreach ($rightFieldDescriptions as $field => $desc) {
@@ -257,6 +248,9 @@ class ImagesWithStyleSelection extends DataObject
             }
         }
         //...
+
+        $this->addLinksToFolderOnAFieldAsRightTitle($treeField);
+
         if ($this->exists()) {
             $config = GridFieldConfig_RelationEditor::create();
             $config->addComponent(new GridFieldSortableRows('SortOrder'));
@@ -272,6 +266,20 @@ class ImagesWithStyleSelection extends DataObject
                 );
         }
         return $fields;
+    }
+
+    public function addLinksToFolderOnAFieldAsRightTitle($folderField)
+    {
+        if ($this->PlaceToStoreImagesID) {
+            $folder = $this->PlaceToStoreImages();
+            if ($folder && $folder->exists()) {
+                $rightFieldTitle = $folderField->RightTitle();
+                $rightFieldTitle .= '
+                    <br  /><a href="/admin/assets/add/?ID='.$folder->ID.'" target="_blank">add images directly</a> to the <a href="/admin/assets/show/'.$folder->ID.'/" target="_blank">folder</a></a>
+                    <br /><strong>To receive the latest updates uploaded to your folder, you will need to click save below!</strong>';
+                $folderField->setRightTitle($rightFieldTitle);
+            }
+        }
     }
 
     /**
