@@ -44,15 +44,14 @@ class ImageWithStyleDataExtension extends DataExtension
                     )
                 ]
             );
-            if ($myListObject) {
-                $myListObject->addLinksToFolderOnAFieldAsRightTitle($imageListField);
+            if ($imageListField && $myListObject) {
+                ImagesWithStyleCMSAPI::add_links_to_folder_field($imageListField, $myListObject);
             }
             $fieldID = $tabName.'ImageSelectionID';
-            if ($this->owner->$fieldID && $imageList = ImagesWithStyleSelection::get()->byID($this->owner->$fieldID)) {
-                if ($imageList->PlaceToStoreImagesID) {
-                    $imageListField->setRightTitle(
-                        $this->owner->FolderDescriptionOrRightTitle($imageList->PlaceToStoreImagesID)
-                    );
+            if ($this->owner->$fieldID) {
+                $imageList = ImagesWithStyleSelection::get()->byID($this->owner->$fieldID);
+                if ($imageList) {
+                    ImagesWithStyleCMSAPI::add_links_to_folder_field($imageListField, $imageList);
                 }
             }
             if ($obj->exists() && $obj->StyledImages()->count()) {
@@ -84,8 +83,9 @@ class ImageWithStyleDataExtension extends DataExtension
 
     public function createImageWithStyleListAndFolder($methodName, $folderName = '')
     {
-        if (strtotime($this->owner->LastEdited) > (strtotime($this->owner->Created) + 1)) {
-            if (!$folderName) {
+        //we add plus ten because they are not always identical
+        if (strtotime($this->owner->LastEdited) > (strtotime($this->owner->Created) + 5)) {
+            if ($folderName === '') {
                 $folderName = $methodName.'-for-'.$this->owner->ClassName.'-'.$this->owner->ID;
             }
             $listName = $this->owner->folderToListName($folderName);
@@ -98,8 +98,9 @@ class ImageWithStyleDataExtension extends DataExtension
                 $obj = ImagesWithStyleSelection::create($array);
             }
             $obj->write();
-            $obj->createFolder($folderName);
-            $fieldName = $methodName.'ID';
+            if ($folderName) {
+                $obj->createFolder($folderName);
+            }
         }
     }
 

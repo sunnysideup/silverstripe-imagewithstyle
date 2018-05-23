@@ -235,7 +235,7 @@ class ImagesWithStyleSelection extends DataObject
                 'Folder'
             )->setRightTitle('Optional - set folder ... all images in this folder will automatically be added.')
         );
-        
+
         //do first??
         $rightFieldDescriptions = $this->Config()->get('field_labels_right');
         foreach ($rightFieldDescriptions as $field => $desc) {
@@ -249,7 +249,7 @@ class ImagesWithStyleSelection extends DataObject
         }
         //...
 
-        $this->addLinksToFolderOnAFieldAsRightTitle($treeField);
+        ImagesWithStyleCMSAPI::add_links_to_folder_field($treeField, $this);
 
         if ($this->exists()) {
             $config = GridFieldConfig_RelationEditor::create();
@@ -268,19 +268,6 @@ class ImagesWithStyleSelection extends DataObject
         return $fields;
     }
 
-    public function addLinksToFolderOnAFieldAsRightTitle($folderField)
-    {
-        if ($this->PlaceToStoreImagesID) {
-            $folder = $this->PlaceToStoreImages();
-            if ($folder && $folder->exists()) {
-                $rightFieldTitle = $folderField->RightTitle();
-                $rightFieldTitle .= '
-                    <br  /><a href="/admin/assets/add/?ID='.$folder->ID.'" target="_blank">add images directly</a> to the <a href="/admin/assets/show/'.$folder->ID.'/" target="_blank">folder</a></a>
-                    <br /><strong>To receive the latest updates uploaded to your folder, you will need to click save below!</strong>';
-                $folderField->setRightTitle($rightFieldTitle);
-            }
-        }
-    }
 
     /**
      * @return Int
@@ -310,6 +297,7 @@ class ImagesWithStyleSelection extends DataObject
     /**
      * force the list to use a certain folder ...
      * @param  string $folderName
+     *
      * @return ImagesWithStyleSelection
      */
     public function createFolder($folderName)
