@@ -52,24 +52,26 @@ class ImagesWithStyleCMSAPI extends Object
 
     protected static function check_for_folder_changes_and_migrate_images($keyDetail, $list)
     {
-        if ($keyDetail['before'] !== $keyDetail['after']) {
-            $oldFolder = Folder::find_or_make($keyDetail['before']);
-            $newFolder = Folder::find_or_make($keyDetail['after']);
-            $oldImages = Image::get()->filter(['ParentID' => $oldFolder->ID]);
-            if ($newFolder && $newFolder->exists()) {
-                if ($list && $list->exists()) {
-                    $list->PlaceToStoreImagesID = $newFolder->ID;
-                    $list->write();
-                }
-                if ($oldFolder && $oldFolder->exists()) {
-                    if ($oldImages && $oldImages->count()) {
-                        foreach ($oldImages as $oldImage) {
-                            $oldImage->ParentID = $newFolder->ID;
-                            $oldImage->write();
-                        }
-                        $oldFilesAny = File::get()->filter(['ParentID' => $oldFolder->ID]);
-                        if ($oldFilesAny->count()) {
-                            $oldFilesAny->delete();
+        if(isset($keyDetail['before']) && isset($keyDetail['after'])) {
+            if ($keyDetail['before'] !== $keyDetail['after']) {
+                $oldFolder = Folder::find_or_make($keyDetail['before']);
+                $newFolder = Folder::find_or_make($keyDetail['after']);
+                $oldImages = Image::get()->filter(['ParentID' => $oldFolder->ID]);
+                if ($newFolder && $newFolder->exists()) {
+                    if ($list && $list->exists()) {
+                        $list->PlaceToStoreImagesID = $newFolder->ID;
+                        $list->write();
+                    }
+                    if ($oldFolder && $oldFolder->exists()) {
+                        if ($oldImages && $oldImages->count()) {
+                            foreach ($oldImages as $oldImage) {
+                                $oldImage->ParentID = $newFolder->ID;
+                                $oldImage->write();
+                            }
+                            $oldFilesAny = File::get()->filter(['ParentID' => $oldFolder->ID]);
+                            if ($oldFilesAny->count()) {
+                                $oldFilesAny->delete();
+                            }
                         }
                     }
                 }
