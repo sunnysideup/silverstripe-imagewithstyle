@@ -52,7 +52,7 @@ class ImagesWithStyleCMSAPI extends Object
 
     protected static function check_for_folder_changes_and_migrate_images($keyDetail, $list)
     {
-        if(isset($keyDetail['before']) && isset($keyDetail['after'])) {
+        if (isset($keyDetail['before']) && isset($keyDetail['after'])) {
             if ($keyDetail['before'] !== $keyDetail['after']) {
                 $oldFolder = Folder::find_or_make($keyDetail['before']);
                 $newFolder = Folder::find_or_make($keyDetail['after']);
