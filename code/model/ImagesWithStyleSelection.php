@@ -48,7 +48,10 @@ class ImagesWithStyleSelection extends DataObject
         ]
     ];
 
-
+    public function StyledImages()
+    {
+        return $this->getManyManyComponents('StyledImages')->sort('SortOrder');
+    }
 
     #######################
     ### Further DB Field Details
