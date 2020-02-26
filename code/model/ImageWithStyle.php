@@ -29,7 +29,7 @@ class ImageWithStyle extends DataObject
     #######################
 
     private static $db = [
-        'Title' => 'Varchar',
+        'Title' => 'Varchar(100)',
         'Description' => 'Text',
         'AlternativeImageURL' => 'Varchar(255)', //e.g. https://via.placeholder.com/468x60?text=hellooooooooooooooo
         'VideoLink' => 'Varchar(255)',
@@ -342,9 +342,11 @@ class ImageWithStyle extends DataObject
                     'ClassNameForCSS' => $style->ClassNameForCSS,
                     'ImageTag' => $this->getImageTag(),
                     'Caption' => $this->Description,
-                    'ImageObject' => $this->Image()
+                    'ImageObject' => $this->Image(),
+                    'LinksTo' => $this->LinksTo(),
                 ];
-                return ArrayData::create($array)->renderWith('ImageWithStyle');
+                return ArrayData::create($array)
+                    ->renderWith('ImageWithStyle');
             }
         }
         return $html;
