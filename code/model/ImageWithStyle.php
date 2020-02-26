@@ -31,16 +31,19 @@ class ImageWithStyle extends DataObject
     private static $db = [
         'Title' => 'Varchar',
         'Description' => 'Text',
+        'AlternativeImageURL' => 'Varchar(255)', //e.g. https://via.placeholder.com/468x60?text=hellooooooooooooooo
+        'VideoLink' => 'Varchar(255)',
         'Var1' => 'Varchar',
         'Var2' => 'Varchar',
         'Var3' => 'Varchar',
         'Var4' => 'Varchar',
-        'Var5' => 'Varchar'
+        'Var5' => 'Varchar',
     ];
 
     private static $has_one = [
         'Image' => 'Image',
-        'Style' => 'ImageStyle'
+        'Style' => 'ImageStyle',
+        'LinksTo' => 'SiteTree',
     ];
 
     private static $belongs_many_many = [
@@ -127,8 +130,12 @@ class ImageWithStyle extends DataObject
         $fieldLabels = $this->FieldLabels();
         $indexes = $this->Config()->get('indexes');
         $requiredFields = $this->Config()->get('required_fields');
-        if ($this->exists() && $this->hasRealStyle()) {
-            $requiredFields[] = 'ImageID';
+        if($this->exists() && $this->hasRealStyle()) {
+            if($this->AlternativeImageURL) {
+                $requiredFields[] = 'AlternativeImageURL';
+            } else {
+                $requiredFields[] = 'ImageID';
+            }
         }
         if (is_array($requiredFields)) {
             foreach ($requiredFields as $field) {
@@ -300,6 +307,15 @@ class ImageWithStyle extends DataObject
             )
         );
 
+        $fields->replaceField(
+            'LinksToID',
+            TreeDropdownField::create(
+                'LinksToID',
+                'LinksTo',
+                'SiteTree'
+            )
+        );
+
         return $fields;
     }
 
@@ -318,14 +334,13 @@ class ImageWithStyle extends DataObject
     public function getImageElement()
     {
         $html = '';
-        if ($this->ImageID && $this->hasRealStyle()) {
-            $image = $this->Image();
-            if ($image && $image->exists()) {
+        if ($this->hasRealStyle()) {
+            if ($this->hasImageOrAlternativeImage()) {
                 $style = $this->Style();
                 $array = [
                     'Styles' => $this->buildStyles(),
                     'ClassNameForCSS' => $style->ClassNameForCSS,
-                    'ImageTag' => $image->PerfectCMSImageTag($style->ClassNameForCSS),
+                    'ImageTag' => $this->getImageTag(),
                     'Caption' => $this->Description,
                     'ImageObject' => $this->Image()
                 ];
@@ -334,6 +349,25 @@ class ImageWithStyle extends DataObject
         }
         return $html;
     }
+
+    public function getImageTag()
+    {
+        if($this->AlternativeImageURL) {
+            return '<img src="'.$this->AlternativeImageURL.'" alt="'.Convert::raw2att($this->Title).'" />';
+        } else {
+            return $this->Image()->PerfectCMSImageTag($this->Style()->ClassNameForCSS);
+        }
+    }
+
+    public function hasImageOrAlternativeImage() : bool
+    {
+        if($this->AlternativeImageURL) {
+            return true;
+        } else {
+            return $image && $image->exists();
+        }
+    }
+
 
     /**
      * @return string (HTML)

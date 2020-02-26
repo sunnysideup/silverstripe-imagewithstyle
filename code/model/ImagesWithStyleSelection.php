@@ -6,6 +6,12 @@ class ImagesWithStyleSelection extends DataObject
 {
 
 
+    private static $size_options = [
+        'landscape' => '1000x600',
+        'portrait' => '600x1000',
+        'cube' => '1000x1000',
+    ];
+
     #######################
     ### Names Section
     #######################
@@ -190,7 +196,38 @@ class ImagesWithStyleSelection extends DataObject
     public function requireDefaultRecords()
     {
         parent::requireDefaultRecords();
-        //...
+        // set up a test list
+        $filter = ['Title' => 'TEST LIST'];
+        $list = DataObject::get_one('ImagesWithStyleSelection', $filter);
+        if(! $list) {
+            $list = ImagesWithStyleSelection::create($filter);
+            $list->write();
+        }
+        $styles = ImageStyle::get();
+        foreach ($styles as $style) {
+            foreach ($this->config()->get('size_options') as $sizeOptionName => $sizeOptionSizes){
+                list($width, $height) = explode('x', $sizeOptionSizes);
+                $width = intval($width);
+                $height = intval($height);
+                $name = $style->Title . ' (' . $style->ClassNameForCSS . ')-' . $sizeOptionName;
+                $link = $this->getPlaceholderImage($width, $height, $name);
+                $filter = ['AlternativeImageURL' => $link];
+                $image = DataObject::get_one('ImageWithStyle', $filter);
+                if(! $image) {
+                    $image = ImageWithStyle::create($filter);
+                }
+                $image->Title = $style->Title . ' STYLE - '. $sizeOptionName.' IMAGE';
+                DB::alteration_message('Creating / Updating '.$image->Title);
+                $image->StyleID = $style->ID;
+                $image->write();
+                $list->StyledImages()->add($image);
+            }
+        }
+    }
+
+    protected function getPlaceholderImage($width, $height, $name) : string
+    {
+        return 'https://via.placeholder.com/' . $width. 'x'. $height . '?text='.urlencode($name);
     }
 
 
