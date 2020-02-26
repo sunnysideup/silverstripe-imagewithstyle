@@ -204,6 +204,11 @@ class ImagesWithStyleSelection extends DataObject
             $list->write();
         }
         $styles = ImageStyle::get();
+        $styledImages = $list->StyledImages();
+        foreach($styledImages as $image) {
+            $styledImages->removeByID($image->ID);
+            $image->delete();
+        }
         foreach ($styles as $style) {
             foreach ($this->config()->get('size_options') as $sizeOptionName => $sizeOptionSizes){
                 list($width, $height) = explode('x', $sizeOptionSizes);
@@ -227,9 +232,31 @@ class ImagesWithStyleSelection extends DataObject
 
     protected function getPlaceholderImage($width, $height, $name) : string
     {
-        return 'https://via.placeholder.com/' . $width. 'x'. $height . '?text='.urlencode($name);
+        $colour = $this->randomColour();
+        $oppositeColour = $this->colourInverse($colour);
+
+        return 'https://via.placeholder.com/' . $width. 'x'. $height . '/'.$colour.'/'.$oppositeColour.'/?text='.urlencode($name);
     }
 
+    private function randomColour() : string
+    {
+        return $this->randomColourPart() . $this->randomColourPart() . $this->randomColourPart();
+    }
+
+    private function randomColourPart() : string
+    {
+        return str_pad( dechex( mt_rand( 0, 255 ) ), 2, '0', STR_PAD_LEFT);
+    }
+
+    private function colourInverse($color){
+        $rgb = '';
+        for ($x=0;$x<3;$x++){
+            $c = 255 - hexdec(substr($color,(2*$x),2));
+            $c = ($c < 0) ? 0 : dechex($c);
+            $rgb .= (strlen($c) < 2) ? '0'.$c : $c;
+        }
+        return $rgb;
+    }
 
     #######################
     ### Import / Export Section
