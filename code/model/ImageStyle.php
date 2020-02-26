@@ -57,6 +57,9 @@ class ImageStyle extends DataObject
         'Title' => 'Varchar',
         'ClassNameForCSS' => 'Varchar',
         'Description' => 'Text',
+        'AlternativeImageURL' => 'Varchar(255)', //e.g. https://via.placeholder.com/468x60?text=hellooooooooooooooo
+        'VideoLink' => 'Varchar(255)',
+
         'Var1Name' => 'Varchar',
         'Var1Type' => 'Enum(\'Pixels,Percentage,Options\', \'Pixels\')',
         'Var1Options' => 'Varchar(200)',
@@ -82,6 +85,10 @@ class ImageStyle extends DataObject
         'Var5Options' => 'Varchar(200)',
         'Var5Description' => 'Varchar(200)',
 
+    ];
+
+    private static $has_one = [
+        'LinkPage' => 'SiteTree',
     ];
 
     private static $has_many = [
