@@ -344,6 +344,8 @@ class ImageWithStyle extends DataObject
                     'Caption' => $this->Description,
                     'ImageObject' => $this->Image(),
                     'LinksTo' => $this->LinksTo(),
+                    'YouTubeVideoThumbnailURL' => $this->getYouTubeVideoThumbnailURL(),
+                    'VideoLink' => $this->VideoLink,
                 ];
                 return ArrayData::create($array)
                     ->renderWith('ImageWithStyle');
@@ -358,6 +360,22 @@ class ImageWithStyle extends DataObject
             return '<img src="'.$this->AlternativeImageURL.'" alt="'.Convert::raw2att($this->Title).'" />';
         } else {
             return $this->Image()->PerfectCMSImageTag($this->Style()->ClassNameForCSS);
+        }
+    }
+
+    public function getYouTubeVideoThumbnailURL() {
+        if (!$this->VideoLink) {
+            return null;
+        }
+        else {
+            // this regular expression could be quite fragile IDK
+            // YouTube video URL IDs are NOT guaranteed to always be 11 characters long...
+            $youTubeVideoIDRegex = preg_match('/v=\w{11}/', $this->VideoLink, $matches);
+            if (count($matches) == 0) {
+                throw new Exception('Could not find the ID from the VideoLink');
+            }
+            // remove the "v=" from the front of the result
+            return substr($matches[0], 2);
         }
     }
 
