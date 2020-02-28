@@ -131,7 +131,9 @@ class ImageWithStyle extends DataObject
         $indexes = $this->Config()->get('indexes');
         $requiredFields = $this->Config()->get('required_fields');
         if($this->exists() && $this->hasRealStyle()) {
-            if($this->AlternativeImageURL) {
+            if($this->VideoLink) {
+                $requiredFields[] = 'VideoLink';
+            } elseif($this->AlternativeImageURL) {
                 $requiredFields[] = 'AlternativeImageURL';
             } else {
                 $requiredFields[] = 'ImageID';
@@ -316,6 +318,14 @@ class ImageWithStyle extends DataObject
             )
         );
 
+        $fields->replaceField(
+            'VideoLink',
+            TextField::create(
+                'VideoLink',
+                'Link to Video'
+            )->setDescription('For youtube, your link should look something like: https://www.youtube.com/watch?v=igiiMi2ZIMo.')
+        );
+
         return $fields;
     }
 
@@ -335,23 +345,30 @@ class ImageWithStyle extends DataObject
     {
         $html = '';
         if ($this->hasRealStyle()) {
-            if ($this->hasImageOrAlternativeImage()) {
-                $style = $this->Style();
-                $array = [
-                    'Styles' => $this->buildStyles(),
-                    'ClassNameForCSS' => $style->ClassNameForCSS,
-                    'ImageTag' => $this->getImageTag(),
-                    'Caption' => $this->Description,
-                    'ImageObject' => $this->Image(),
-                    'LinksTo' => $this->LinksTo(),
-                    'YouTubeVideoThumbnailURL' => $this->getYouTubeVideoThumbnailURL(),
-                    'VideoLink' => $this->VideoLink,
-                ];
-                return ArrayData::create($array)
-                    ->renderWith('ImageWithStyle');
+            if ($this->hasVideoOrImage()) {
+                return $this->renderWith('ImageWithStyle');
             }
         }
         return $html;
+    }
+
+    public function getImageObject()
+    {
+        return $this->Image();
+    }
+
+    public function getCaption() : string
+    {
+        return (string) $this->Description;
+    }
+
+    public function getClassNameForCSS() : string
+    {
+        $style = $this->Style();
+        if($style && $style->exists()) {
+            return (string) $style->ClassNameForCSS;
+        }
+        return '';
     }
 
     public function getImageTag()
@@ -363,36 +380,86 @@ class ImageWithStyle extends DataObject
         }
     }
 
-    public function getYouTubeVideoThumbnailURL() {
-        if (!$this->VideoLink) {
-            return null;
-        }
-        else {
-            // this regular expression could be quite fragile IDK
-            // YouTube video URL IDs are NOT guaranteed to always be 11 characters long...
-            $youTubeVideoIDRegex = preg_match('/v=\w{11}/', $this->VideoLink, $matches);
-            if (count($matches) == 0) {
-                throw new Exception('Could not find the ID from the VideoLink');
-            }
-            // remove the "v=" from the front of the result
-            return substr($matches[0], 2);
+    public function getIsVideo() : bool
+    {
+        return $this->getVideoCode() ? true : false;
+    }
+
+    public function getVideoCode() : string
+    {
+        $type = $this->getVideoType();
+        switch ($type) {
+            case 'YOUTUBE':
+                // this regular expression could be quite fragile IDK
+                // YouTube video URL IDs are NOT guaranteed to always be 11 characters long...
+                $youTubeVideoIDRegex = preg_match('/v=\w{11}/', $this->VideoLink, $matches);
+                if (count($matches) === 0) {
+                    throw new Exception('Could not find the Youtube ID from the VideoLink');
+                }
+                // remove the "v=" from the front of the result
+                return substr($matches[0], 2);
+            case 'VIMEO':
+                return 'ERROR';
+            default:
+                return '';
         }
     }
 
-    public function hasImageOrAlternativeImage() : bool
+    protected function getVideoType() : string
     {
+        if($this->VideoLink) {
+            if (stripos($this->VideoLink, 'youtube') !== false) {
+                return "YOUTUBE";
+            } elseif (stripos($this->VideoLink, 'vimeo') !== false) {
+                return 'VIMEO';
+            }
+        }
+        return '';
+    }
+
+    public function getVideoThumbnailSrc() : string
+    {
+        $type = $this->getVideoType();
+        switch ($type) {
+            case 'YOUTUBE':
+                return 'https://img.youtube.com/vi/'.$this->getVideoCode().'/maxresdefault.jpg';
+            case 'VIMEO':
+                return 'ERROR';
+            default:
+                return '';
+        }
+    }
+
+    public function getCalculatedLinkTo()
+    {
+        if($this->VideoLink) {
+            return $this->VideoLink;
+        } elseif($this->LinkToID && $page = $this->LinkTo()) {
+            return $page->Link();
+        }
+    }
+
+    public function hasVideoOrImage() : bool
+    {
+        if($this->getIsVideo()) {
+            return true;
+        }
         if($this->AlternativeImageURL) {
             return true;
         } else {
-            return $image && $image->exists();
+            return $this->Image && $this->Image->exists();
         }
     }
 
+    public function getMyStyles()
+    {
+        return $this->buildStyles();
+    }
 
     /**
      * @return string (HTML)
      */
-    public function buildStyles()
+    protected function buildStyles()
     {
         $styles = '';
         if ($this->hasRealStyle()) {

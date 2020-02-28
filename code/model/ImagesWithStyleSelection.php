@@ -10,6 +10,7 @@ class ImagesWithStyleSelection extends DataObject
         'landscape' => '1000x600',
         'portrait' => '600x1000',
         'cube' => '1000x1000',
+        'video' => 'https://www.youtube.com/watch?v=AAnzPa5YFLk',
     ];
 
     #######################
@@ -196,6 +197,8 @@ class ImagesWithStyleSelection extends DataObject
     public function requireDefaultRecords()
     {
         parent::requireDefaultRecords();
+
+        $stylesCompleted = [];
         // set up a test list
         $filter = ['Title' => 'TEST LIST'];
         $list = DataObject::get_one('ImagesWithStyleSelection', $filter);
@@ -210,22 +213,45 @@ class ImagesWithStyleSelection extends DataObject
             $image->delete();
         }
         foreach ($styles as $style) {
-            foreach ($this->config()->get('size_options') as $sizeOptionName => $sizeOptionSizes){
-                list($width, $height) = explode('x', $sizeOptionSizes);
-                $width = intval($width);
-                $height = intval($height);
-                $name = $style->Title . ' (' . $style->ClassNameForCSS . ')-' . $sizeOptionName;
-                $link = $this->getPlaceholderImage($width, $height, $name);
-                $filter = ['AlternativeImageURL' => $link];
-                $image = DataObject::get_one('ImageWithStyle', $filter);
-                if(! $image) {
-                    $image = ImageWithStyle::create($filter);
+            if(! isset($stylesCompleted[$style->ClassNameForCSS])) {
+                DB::alteration_message('dddddddddddddddddddddddddddddd'.$style->ClassNameForCSS);
+                $stylesCompleted[$style->ClassNameForCSS] = true;
+                foreach ($this->config()->get('size_options') as $sizeOptionName => $sizeOptionSizes){
+                    if($sizeOptionName === 'video') {
+                        $link = $sizeOptionSizes;
+                        $filter = [
+                            'VideoLink' => $link,
+                            'StyleID' => $style->ID,
+                        ];
+                        $image = DataObject::get_one('ImageWithStyle', $filter);
+                        if(! $image) {
+                            $image = ImageWithStyle::create($filter);
+                        }
+                        $image->Title = $link . ', STYLE: '.$style->Title;
+                    } else {
+                        list($width, $height) = explode('x', $sizeOptionSizes);
+                        $width = intval($width);
+                        $height = intval($height);
+                        $name = $style->Title . ' (' . $style->ClassNameForCSS . ')-' . $sizeOptionName;
+                        $link = $this->getPlaceholderImage($width, $height, $name);
+                        $filter = ['AlternativeImageURL' => $link];
+                        $image = DataObject::get_one('ImageWithStyle', $filter);
+                        if(! $image) {
+                            $image = ImageWithStyle::create($filter);
+                        }
+                        $image->Title = $style->Title . ' STYLE - '. $sizeOptionName.' IMAGE';
+                    }
+                    $image->StyleID = $style->ID;
+                    DB::alteration_message('Creating / Updating '.$image->Title);
+                    $image->write();
+                    $list->StyledImages()->add($image);
                 }
-                $image->Title = $style->Title . ' STYLE - '. $sizeOptionName.' IMAGE';
-                DB::alteration_message('Creating / Updating '.$image->Title);
-                $image->StyleID = $style->ID;
-                $image->write();
-                $list->StyledImages()->add($image);
+            } else {
+                DB::alteration_message('eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'.$style->ClassNameForCSS);
+                if(strpos($style->Title, 'DOUBLE-UP') === false) {
+                    $style->Title = $style->Title . ' - DOUBLE-UP';
+                    $style->write();
+                }
             }
         }
     }
