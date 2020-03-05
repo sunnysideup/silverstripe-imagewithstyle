@@ -399,7 +399,11 @@ class ImageWithStyle extends DataObject
                 // remove the "v=" from the front of the result
                 return substr($matches[0], 2);
             case 'VIMEO':
-                return 'ERROR';
+                $vimeoIDRegex = preg_match('/vimeo.com\/([0-9]+$)/', $this->VideoLink, $matches);
+                if (count($matches) === 0) {
+                    throw new Exception('Could not find the Vimeo ID from the VideoLink');
+                }
+                return substr($matches[0], strlen('vimeo.com/'));
             default:
                 return '';
         }
@@ -424,7 +428,8 @@ class ImageWithStyle extends DataObject
             case 'YOUTUBE':
                 return 'https://img.youtube.com/vi/'.$this->getVideoCode().'/maxresdefault.jpg';
             case 'VIMEO':
-                return 'ERROR';
+                $videoMetaData = unserialize(file_get_contents('http://vimeo.com/api/v2/video/' . $this->getVideoCode() . '.php'));
+                return $videoMetaData[0]['thumbnail_large'];
             default:
                 return '';
         }

@@ -10,7 +10,8 @@ class ImagesWithStyleSelection extends DataObject
         'landscape' => '1000x600',
         'portrait' => '600x1000',
         'cube' => '1000x1000',
-        'video' => 'https://www.youtube.com/watch?v=AAnzPa5YFLk',
+        'youtubeVideo' => 'https://www.youtube.com/watch?v=AAnzPa5YFLk',
+        'vimeoVideo' => 'https://vimeo.com/108799588',
     ];
 
     #######################
@@ -217,7 +218,7 @@ class ImagesWithStyleSelection extends DataObject
                 DB::alteration_message('dddddddddddddddddddddddddddddd'.$style->ClassNameForCSS);
                 $stylesCompleted[$style->ClassNameForCSS] = true;
                 foreach ($this->config()->get('size_options') as $sizeOptionName => $sizeOptionSizes){
-                    if($sizeOptionName === 'video') {
+                    if($sizeOptionName === 'youtubeVideo' or $sizeOptionName === 'vimeoVideo') {
                         $link = $sizeOptionSizes;
                         $filter = [
                             'VideoLink' => $link,
