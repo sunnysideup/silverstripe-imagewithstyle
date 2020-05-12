@@ -101,9 +101,24 @@ class ImagesWithStyleSelection extends DataObject
 
     private static $summary_fields = [
         'Title' => 'Name',
-        'StyledImages.Count' => 'Number of Images'
+        'StyledImages.Count' => 'Number of Images',
+        'ImageMedley' => 'HTMLText',
     ];
 
+
+    public function getImageMedley()
+    {
+        $html = '';
+        foreach($this->StyledImages() as $imageHolder) {
+            if($imageHolder && $imageHolder->exists()) {
+                $image = $imageHolder->Image();
+                if($image && $image->exists()) {
+                    $html .= 'xxx'.$image->CMSThumbnail();
+                }
+            }
+        }
+        return $html;
+    }
 
     #######################
     ### Casting Section
@@ -114,6 +129,37 @@ class ImagesWithStyleSelection extends DataObject
     ### can Section
     #######################
 
+    public function canEdit($member = null)
+    {
+        if($this->exists()) {
+            if($this->IsTest()) {
+                return false;
+            }
+        }
+        return parent::canEdit($member);
+    }
+
+    public function canDelete($member = null)
+    {
+        if($this->exists()) {
+            if($this->IsTest()) {
+                return false;
+            }
+        }
+        return parent::canDelete($member);
+    }
+
+    protected function IsTest() : bool
+    {
+        $filter = self::FILTER_FOR_TEST_LIST;
+        foreach($filter as $key => $value) {
+            if($this->$key !== $value) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
 
     #######################
@@ -195,13 +241,15 @@ class ImagesWithStyleSelection extends DataObject
         //...
     }
 
+    const FILTER_FOR_TEST_LIST = ['Title' => 'TEST LIST'];
+
     public function requireDefaultRecords()
     {
         parent::requireDefaultRecords();
 
         $stylesCompleted = [];
         // set up a test list
-        $filter = ['Title' => 'TEST LIST'];
+        $filter = self::FILTER_FOR_TEST_LIST;
         $list = DataObject::get_one('ImagesWithStyleSelection', $filter);
         if(! $list) {
             $list = ImagesWithStyleSelection::create($filter);
@@ -215,7 +263,7 @@ class ImagesWithStyleSelection extends DataObject
         }
         foreach ($styles as $style) {
             if(! isset($stylesCompleted[$style->ClassNameForCSS])) {
-                DB::alteration_message('dddddddddddddddddddddddddddddd'.$style->ClassNameForCSS);
+                DB::alteration_message('Creating - '.$style->ClassNameForCSS);
                 $stylesCompleted[$style->ClassNameForCSS] = true;
                 foreach ($this->config()->get('size_options') as $sizeOptionName => $sizeOptionSizes){
                     if($sizeOptionName === 'youtubeVideo' or $sizeOptionName === 'vimeoVideo') {
@@ -248,7 +296,7 @@ class ImagesWithStyleSelection extends DataObject
                     $list->StyledImages()->add($image);
                 }
             } else {
-                DB::alteration_message('eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'.$style->ClassNameForCSS);
+                DB::alteration_message('Updating - '.$style->ClassNameForCSS);
                 if(strpos($style->Title, 'DOUBLE-UP') === false) {
                     $style->Title = $style->Title . ' - DOUBLE-UP';
                     $style->write();

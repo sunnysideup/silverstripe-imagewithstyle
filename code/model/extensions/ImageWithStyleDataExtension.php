@@ -35,7 +35,7 @@ class ImageWithStyleDataExtension extends DataExtension
             $fields->addFieldsToTab(
                 'Root.'.$tabName,
                 [
-                    HasOneButtonField::create($methodName, $this->owner->$methodName(), $this->owner),
+                    HasOneButtonField::create($methodName, 'Create New List', $this->owner),
                     $imageListField = DropdownField::create(
                         $methodName.'ID',
                         'Select Existing Images List',
