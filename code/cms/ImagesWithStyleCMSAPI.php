@@ -4,6 +4,17 @@
 
 class ImagesWithStyleCMSAPI extends Object
 {
+
+    public static function create_new_images_with_style_list_button()
+    {
+        $obj = Injector::inst()->get('ImagesWithStyleSelection');
+
+        return LiteralField::create(
+            'add_new_images_with_style_selection',
+            'You can also create a <a href="'.$obj->CMSAddLink().'">new '.$obj->singular_name().'</a> and then add it above.'
+        );
+    }
+
     public static function add_links_to_folder_field($formField, $folderOrImagesWithStyleList)
     {
         $folder = null;

@@ -4,56 +4,60 @@
 
 class ImageWithStyleDataExtension extends DataExtension
 {
-    public function AddSelectImageList($fields, $tabName, $methodName, $folderName = '')
+    /**
+     * adds a field in the CMS to select a list, you pass it the CMS Fields
+     *
+     * @param FieldList fields
+     * @param string    $tabName
+     * @param string    $methodName
+     * @param string    $folderName
+     */
+    public function AddSelectImageListField($fields, $tabName, $methodName, $folderName = '')
     {
         if ($this->owner->exists()) {
-            $this->owner->createImageWithStyleListAndFolder($methodName, $folderName);
-            $obj = $this->owner->$methodName();
-            if ($obj && $obj->exists()) {
-                $link = $obj->CMSEditLink();
-                $title = 'edit '.$obj->Title;
-            } else {
-                if (! $obj) {
-                    $obj = Injector::inst()->get('ImagesWithStyleSelection');
-                }
-                $link = $obj->CMSAddLink();
-                $title = 'add '.$obj->singular_name();
-            }
-            $standardListName = $this->owner->folderToListName($folderName);
 
-            $list = ImagesWithStyleSelection::get()->map()->toArray();
-            $myList = ImagesWithStyleSelection::get()->filter(['Title' => $standardListName]);
-            $myListObject = null;
-            if ($myList->count() === 1) {
-                $myListObject = $myList->first();
-                if ($myListObject && $myListObject->exists()) {
-                    $myID = $myListObject->ID;
-                    $list[$myID] = ' *** '.$list[$myID]." [RECOMMENDED] ";
-                    asort($list);
+            //selected one ...
+            $fieldName = $methodName.'ID';
+            $selectedList = $this->owner->$methodName();
+            $defaultList = ImagesWithStyleSelection::create_or_update_default_entry($this->owner, $methodName, $folderName);
+            if(! $selectedList) {
+                $selectedList = $defaultList;
+                $this->owner->$fieldName = $selectedList->ID;
+            } else {
+                if($selectedList->ID !== $defaultList->ID) {
+                    $foldername = ImagesWithStyleSelection::create_folder_name($this->owner, $methodName, $folderName);
+                    $selectedList->createFolder($folderName);
                 }
+            }
+            $selectedList->write();
+
+            //show recommend one!
+            // show dropdown field
+            $list = ImagesWithStyleSelection::get()->map()->toArray();
+            if ($defaultList && $defaultList->exists()) {
+                $myID = $defaultList->ID;
+                $list[$myID] = ' *** '.$list[$myID]." [RECOMMENDED] ";
+                asort($list);
             }
             $fields->addFieldsToTab(
                 'Root.'.$tabName,
                 [
-                    HasOneButtonField::create($methodName, 'Create New List', $this->owner),
+                    HasOneButtonField::create($methodName, 'Edit Existing List', $this->owner),
                     $imageListField = DropdownField::create(
                         $methodName.'ID',
-                        'Select Existing Images List',
+                        'Selected',
                         [0 => '--- Select ---'] + $list
                     )
                 ]
             );
-            if ($imageListField && $myListObject) {
-                ImagesWithStyleCMSAPI::add_links_to_folder_field($imageListField, $myListObject);
+
+            // show links to folder
+            if ($imageListField && $selectedList) {
+                ImagesWithStyleCMSAPI::add_links_to_folder_field($imageListField, $selectedList);
             }
-            $fieldID = $tabName.'ImageSelectionID';
-            if ($this->owner->$fieldID) {
-                $imageList = ImagesWithStyleSelection::get()->byID($this->owner->$fieldID);
-                if ($imageList) {
-                    ImagesWithStyleCMSAPI::add_links_to_folder_field($imageListField, $imageList);
-                }
-            }
-            if ($obj->exists() && $obj->StyledImages()->count()) {
+
+            // show images associated with current list.
+            if ($selectedList->exists()) {
                 $config = GridFieldConfig_RecordEditor::create()->removeComponentsByType('GridFieldAddNewButton');
                 $fields->addFieldsToTab(
                     'Root.'.$tabName,
@@ -61,9 +65,10 @@ class ImageWithStyleDataExtension extends DataExtension
                         GridField::create(
                             $methodName.'_Images',
                             'Included Are',
-                            $obj->StyledImages(),
+                            $selectedList->StyledImages(),
                             $config
-                        )
+                        ),
+                        ImagesWithStyleCMSAPI::create_new_images_with_style_list_button()
                     ]
                 );
             }
@@ -80,31 +85,4 @@ class ImageWithStyleDataExtension extends DataExtension
         }
     }
 
-    public function createImageWithStyleListAndFolder($methodName, $folderName = '')
-    {
-        //we add plus ten because they are not always identical
-        if (strtotime($this->owner->LastEdited) > (strtotime($this->owner->Created) + 5)) {
-            if ($folderName === '') {
-                $folderName = $methodName.'-for-'.$this->owner->ClassName.'-'.$this->owner->ID;
-            }
-            $listName = $this->owner->folderToListName($folderName);
-
-            $array = [
-                'Title' => $listName
-            ];
-            $obj = ImagesWithStyleSelection::get()->filter($array)->first();
-            if (! $obj) {
-                $obj = ImagesWithStyleSelection::create($array);
-            }
-            $obj->write();
-            if ($folderName) {
-                $obj->createFolder($folderName);
-            }
-        }
-    }
-
-    public function folderToListName($folderName)
-    {
-        return str_replace('/', '-', $folderName);
-    }
 }

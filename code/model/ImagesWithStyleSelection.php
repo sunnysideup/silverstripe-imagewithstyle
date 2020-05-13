@@ -5,6 +5,61 @@
 class ImagesWithStyleSelection extends DataObject
 {
 
+    /**
+     * creates a folder name for a specific page for a specific method.
+     *
+     * @param  DataObject  $owner
+     * @param  string      $methodName
+     * @param  string      $folderName - optional
+     *
+     * @return string
+     */
+    public static function create_folder_name($owner, string $methodName, ?string $folderName = '') : string
+    {
+        if($folderName) {
+            return $folderName;
+        } else {
+            return $methodName.'-for-'.$owner->ClassName.'-'.$owner->ID;
+        }
+    }
+
+
+    public static function folder_to_list_name(string $folderName) : string
+    {
+        return str_replace('/', '-', $folderName);
+    }
+
+    /**
+     * creates a default image list for a specific owner and method.
+     * @param  DataObject   $owner
+     * @param  string       $methodName
+     * @param  string       $folderName
+     * @return ImagesWithStyleSelection
+     */
+    public static function create_or_update_default_entry($owner, string $methodName, ?string $folderName = '')
+    {
+        //we add plus ten because they are not always identical
+        if (strtotime($owner->LastEdited) > (strtotime($owner->Created) + 5)) {
+            if ($folderName === '') {
+                $folderName = self::create_folder_name($owner);
+            }
+            $listName = self::folder_to_list_name($folderName);
+
+            $array = [
+                'Title' => $listName
+            ];
+            $obj = ImagesWithStyleSelection::get()->filter($array)->first();
+            if (! $obj) {
+                $obj = ImagesWithStyleSelection::create($array);
+            }
+
+            $obj->createFolder($folderName);
+            $obj->write();
+
+            return $obj;
+        }
+        return null;
+    }
 
     private static $size_options = [
         'landscape' => '1000x600',
@@ -101,6 +156,7 @@ class ImagesWithStyleSelection extends DataObject
 
     private static $summary_fields = [
         'Title' => 'Name',
+        'Description' => 'Name',
         'StyledImages.Count' => 'Number of Images',
         'ImageMedley' => 'HTMLText',
     ];
@@ -110,14 +166,21 @@ class ImagesWithStyleSelection extends DataObject
     {
         $html = '';
         foreach($this->StyledImages() as $imageHolder) {
+            $newImage = '[Image Missing]';
             if($imageHolder && $imageHolder->exists()) {
+                $newImage = '['.$imageHolder->Title.']';
                 $image = $imageHolder->Image();
                 if($image && $image->exists()) {
-                    $html .= 'xxx'.$image->CMSThumbnail();
+                    $newImage = '['.$image->Link().']';
+                    $thumb = $image->CMSThumbnail();
+                    if($thumb) {
+                        $newImage = $thumb->getTag();
+                    }
                 }
             }
+            $html .= $newImage.'<br />';
         }
-        return $html;
+        return DBField::create_field('HTMLText', $html);
     }
 
     #######################
@@ -215,16 +278,25 @@ class ImagesWithStyleSelection extends DataObject
         return $result;
     }
 
+    protected function setDefaultTitle()
+    {
+        if($this->exists() && ! $this->Title) {
+            $this->Title = 'List # '.$this->ID;
+        }
+    }
 
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
+
+        $this->setDefaultTitle();
+
         if ($this->exists() && $this->PlaceToStoreImagesID) {
-            $allImages = Image::get()->filter(['ParentID' => $this->PlaceToStoreImagesID])->column('ID');
-            $existingImages = $this->RawImages()->column('ID');
-            $difference = array_diff($allImages, $existingImages);
-            $list = $this->StyledImages();
+            $allImagesIDs = Image::get()->filter(['ParentID' => $this->PlaceToStoreImagesID])->column('ID');
+            $existingImagesIDs = $this->RawImages()->column('ID');
+            $difference = array_diff($allImagesIDs, $existingImagesIDs);
             if (count($difference)) {
+                $list = $this->StyledImages();
                 foreach ($difference as $imageID) {
                     $image = Image::get()->byID($imageID);
                     if ($image) {
@@ -246,6 +318,12 @@ class ImagesWithStyleSelection extends DataObject
     public function requireDefaultRecords()
     {
         parent::requireDefaultRecords();
+        $emptyOnes = ImagesWithStyleSelection::get()->where('"Title" IS NULL OR Title = \'\'');
+        foreach($emptyOnes as $item) {
+            DB::alteration_message('Fixing up Titles for '.$item->ID);
+            $item->setDefaultTitle();
+            $item->write();
+        }
 
         $stylesCompleted = [];
         // set up a test list
@@ -436,6 +514,8 @@ class ImagesWithStyleSelection extends DataObject
         return Image::get()->filter(['ID' => $array]);
     }
 
+
+
     /**
      * force the list to use a certain folder ...
      * @param  string $folderName
@@ -444,9 +524,20 @@ class ImagesWithStyleSelection extends DataObject
      */
     public function createFolder($folderName)
     {
-        $folder = Folder::find_or_make($folderName);
-        $this->PlaceToStoreImagesID = $folder->ID;
-        $this->write();
+        $folder = $this->PlaceToStoreImages();
+        if($folder && $folder->exists()) {
+            //do nothing
+        } else {
+            //only run for empty images
+            if ($this->StyledImages()->count() == 0) {
+                $folder = Folder::find_or_make($folderName);
+                $this->PlaceToStoreImagesID = $folder->ID;
+                if(! $this->PlaceToStoreImagesID) {
+                    user_error('Could not add folder!'.$folderName);
+                }
+                $this->write();
+            }
+        }
 
         return $this;
     }

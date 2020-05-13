@@ -17,7 +17,7 @@ Use
 class ImageWithStyleDataExtension extends DataExtension
 {
 
-    protected function AddSelectImageList($fields, $tabName, $methodName, $folderName = '')
+    protected function AddSelectImageListField($fields, $tabName, $methodName, $folderName = '')
 }
 
 ```
