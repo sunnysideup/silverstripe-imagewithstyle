@@ -435,13 +435,14 @@ class ImageWithStyle extends DataObject
         }
     }
 
-    public function getCalculatedLinkTo()
+    public function getCalculatedLinkTo() : string
     {
         if($this->VideoLink) {
             return $this->VideoLink;
-        } elseif($this->LinkToID && $page = $this->LinkTo()) {
+        } elseif($this->LinksToID && $page = $this->LinksTo()) {
             return $page->Link();
         }
+        return '';
     }
 
     public function hasVideoOrImage() : bool
@@ -452,7 +453,7 @@ class ImageWithStyle extends DataObject
         if($this->AlternativeImageURL) {
             return true;
         } else {
-            return $this->Image && $this->Image->exists();
+            return $this->Image() && $this->Image()->exists();
         }
     }
 
@@ -488,15 +489,11 @@ class ImageWithStyle extends DataObject
         return $styles;
     }
 
-    protected function hasRealStyle()
+    protected function hasRealStyle() : bool
     {
-        if ($this->StyleID) {
-            $style = $this->Style();
-            return $style->exists();
-        }
-
-        return false;
-    }
+        $style = $this->Style();
+        return $style && $style->exists();
+   }
 
     /**
      * @param string
